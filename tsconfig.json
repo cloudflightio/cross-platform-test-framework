@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "module": "ESNext",
+        "types": [
+            "node",
+            "@wdio/globals/types",
+            "expect-webdriverio",
+            "@wdio/mocha-framework",
+            "@wdio/appium-service",
+            "wdio-image-comparison-service"
+        ],
+        "target": "es2022",
+        "allowImportingTsExtensions": true
+    }
+}

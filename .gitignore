@@ -1,0 +1,23 @@
+# General
+node_modules
+/drivers/chromedriver-*
+/.idea/.gitignore
+/.idea/appium-sandbox-typescript.iml
+/.idea/checkstyle-idea.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
+
+# Test Applications
+apps/
+*.apk
+*.ipa
+*.app
+*.app.zip
+DerivedData/
+
+# Reports
+allure-results
+
+# Logs
+/logs/appium.log
