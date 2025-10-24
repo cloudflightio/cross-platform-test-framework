@@ -7,121 +7,17 @@ const os = require('os');
 const isWindows = os.platform() === 'win32';
 const isMac = os.platform() === 'darwin';
 
-async function selectOption(message, options) {
-    const readline = require('readline');
-    let selectedIndex = 0;
-
-    return new Promise((resolve) => {
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        });
-
-        if (process.stdin.isTTY) {
-            process.stdin.setRawMode(true);
-        }
-        process.stdin.resume();
-
-        const renderMenu = () => {
-            console.clear();
-            console.log(message + '\n');
-            options.forEach((option, index) => {
-                if (index === selectedIndex) {
-                    console.log(`  > ${option.label}`);
-                } else {
-                    console.log(`    ${option.label}`);
-                }
-            });
-            console.log('\n(Use arrow keys to navigate, Enter to select, Esc to cancel)');
-        };
-
-        renderMenu();
-
-        process.stdin.on('keypress', (str, key) => {
-            if (key) {
-                if (key.name === 'up') {
-                    selectedIndex = selectedIndex > 0 ? selectedIndex - 1 : options.length - 1;
-                    renderMenu();
-                } else if (key.name === 'down') {
-                    selectedIndex = selectedIndex < options.length - 1 ? selectedIndex + 1 : 0;
-                    renderMenu();
-                } else if (key.name === 'return') {
-                    if (process.stdin.isTTY) {
-                        process.stdin.setRawMode(false);
-                    }
-                    process.stdin.pause();
-                    rl.close();
-                    resolve(options[selectedIndex]);
-                } else if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
-                    if (process.stdin.isTTY) {
-                        process.stdin.setRawMode(false);
-                    }
-                    process.stdin.pause();
-                    rl.close();
-                    resolve(null);
-                }
-            }
-        });
-    });
-}
-
-async function promptForTestExecution() {
-    console.log('\n' + '='.repeat(50));
-    console.log('🧪 Test Execution\n');
-
-    const runTest = await askQuestion('Would you like to run an example test? (y/n): ');
-
-    if (runTest === 'y' || runTest === 'yes') {
-        const testOptions = [
-            { label: '🌐 Web Test (Edge Browser)', value: 'wdio:web:edge' },
-            { label: '🤖 Android Native App Test', value: 'wdio:android:native' },
-            { label: '🤖 Android Web Browser Test', value: 'wdio:android:web' },
-            { label: '🍏 iOS Native App Test', value: 'wdio:ios:native' },
-            { label: '🍏 iOS Safari Browser Test', value: 'wdio:ios:web' }
-        ];
-
-        const selected = await selectOption('Select a test to run:', testOptions);
-
-        if (selected) {
-            console.log(`\n🚀 Running: npm run ${selected.value}\n`);
-            console.log('=' + '='.repeat(49) + '\n');
-
-            runCommand(`npm run ${selected.value}`, { cwd: path.join(__dirname, '..') });
-        } else {
-            console.log('\n❌ Test execution cancelled\n');
-            displayTestCommands();
-        }
-    } else {
-        displayTestCommands();
-    }
-}
-
 function displayTestCommands() {
     console.log('\n📚 Available Test Commands:\n');
     console.log('  Web Tests:');
-    console.log('    npm run wdio:web:edge        - Run tests in Edge browser\n');
+    console.log('    yarn wdio:web:edge        - Run tests in Edge browser\n');
     console.log('  Android Tests:');
-    console.log('    npm run wdio:android:native  - Run tests in native Wikipedia app');
-    console.log('    npm run wdio:android:web     - Run tests in Chrome browser\n');
+    console.log('    yarn wdio:android:native  - Run tests in native Wikipedia app');
+    console.log('    yarn wdio:android:web     - Run tests in Chrome browser\n');
     console.log('  iOS Tests (macOS only):');
-    console.log('    npm run wdio:ios:native      - Run tests in native Wikipedia app');
-    console.log('    npm run wdio:ios:web         - Run tests in Safari browser\n');
+    console.log('    yarn wdio:ios:native      - Run tests in native Wikipedia app');
+    console.log('    yarn wdio:ios:web         - Run tests in Safari browser\n');
     console.log('  For more information, check the README.md file.');
-}
-
-async function askQuestion(question) {
-    const readline = require('readline');
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-
-    return new Promise((resolve) => {
-        rl.question(question, (answer) => {
-            rl.close();
-            resolve(answer.toLowerCase().trim());
-        });
-    });
 }
 
 async function downloadFile(url, dest) {
@@ -196,19 +92,6 @@ function copyDirectory(src, dest) {
     }
 }
 
-function removeDirectory(dirPath) {
-    try {
-        if (fs.existsSync(dirPath)) {
-            fs.rmSync(dirPath, { recursive: true, force: true });
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.error(`  ❌ Failed to remove directory: ${error.message}`);
-        return false;
-    }
-}
-
 function createZipArchive(sourceDir, zipPath) {
     if (!isMac) {
         console.log('  ⚠️  Zip creation only supported on macOS');
@@ -217,79 +100,61 @@ function createZipArchive(sourceDir, zipPath) {
 
     try {
         const appName = path.basename(sourceDir);
-        const iosDir = path.dirname(sourceDir);
-        const zipName = path.basename(zipPath);
-
-        // Use native zip command on macOS
-        const zipCommand = `cd "${iosDir}" && zip -qr "${zipName}" "${appName}"`;
-        const success = runCommand(zipCommand);
-
-        if (success) {
-            console.log(`  ✅ Created: ${zipPath}`);
-            return true;
+        if (fs.existsSync(zipPath)) {
+            fs.unlinkSync(zipPath);
         }
-        return false;
+
+        const parentDir = path.dirname(sourceDir);
+        runCommand(`cd "${parentDir}" && zip -r "${path.basename(zipPath)}" "${appName}"`, {
+            cwd: parentDir
+        });
+
+        console.log(`  ✅ Created zip archive: ${zipPath}`);
+        return true;
     } catch (error) {
         console.error(`  ❌ Failed to create zip: ${error.message}`);
         return false;
     }
 }
 
-function findApp(baseDir, appName) {
-    const possiblePaths = [
-        path.join(baseDir, 'DerivedData', 'Build', 'Products', 'Debug-iphonesimulator', appName),
-        path.join(baseDir, 'wikipedia-ios-source', 'DerivedData', 'Build', 'Products', 'Debug-iphonesimulator', appName),
-        path.join(baseDir, 'wikipedia-ios-source', 'build', 'Debug-iphonesimulator', appName),
-        path.join(baseDir, 'wikipedia-ios-source', 'Build', 'Products', 'Debug-iphonesimulator', appName),
-    ];
+function findApp(searchDir, targetName) {
+    let resultPath = null;
 
-    for (const appPath of possiblePaths) {
-        if (fs.existsSync(appPath)) {
-            console.log(`  ✅ Found app at: ${appPath}`);
-            return appPath;
-        }
-    }
-
-    console.log('  🔍 Searching for built app...');
-    try {
-        const searchBase = path.join(baseDir, 'wikipedia-ios-source');
-
-        function searchDirectory(dir, targetName) {
-            if (!fs.existsSync(dir)) return null;
-
+    function search(dir) {
+        try {
             const items = fs.readdirSync(dir);
+
             for (const item of items) {
-                const fullPath = path.join(dir, item);
+                if (item === '.git' || item === 'node_modules') continue;
+
+                const itemPath = path.join(dir, item);
                 try {
-                    const stat = fs.statSync(fullPath);
-                    if (stat.isDirectory()) {
-                        if (item === targetName) {
-                            return fullPath;
-                        }
-                        const found = searchDirectory(fullPath, targetName);
-                        if (found) return found;
+                    const stat = fs.statSync(itemPath);
+
+                    if (item === targetName && stat.isDirectory()) {
+                        resultPath = itemPath;
+                        return true;
                     }
-                } catch (e) {
-                    // continue
+
+                    if (stat.isDirectory() && !resultPath) {
+                        if (search(itemPath)) return true;
+                    }
+                } catch (err) {
+                    // continue;
                 }
             }
-            return null;
+        } catch (err) {
+            return false;
         }
-
-        const result = searchDirectory(searchBase, appName);
-        if (result && fs.existsSync(result)) {
-            console.log(`  ✅ Found app at: ${result}`);
-            return result;
-        }
-    } catch (e) {
-        console.log(`  ⚠️ Search failed: ${e.message}`);
+        return false;
     }
 
-    return null;
+    search(searchDir);
+    return resultPath;
 }
 
 async function setupAndroidApp() {
-    console.log('\n📱 Setting up Android App...');
+    console.log('\n🤖 Setting up Android App...');
 
     const androidDir = path.join(__dirname, '..', 'apps', 'android');
     if (!fs.existsSync(androidDir)) {
@@ -403,29 +268,14 @@ async function setupIOSApp() {
             if (zipCreated) {
                 console.log(`  ✅ Created: ${zipPath}`);
 
-                console.log('\n  🧹 Cleanup Options:');
+                console.log('\n  💡 Cleanup Information:');
                 console.log('     The following can be removed to save disk space:');
                 console.log(`     • Wikipedia.app (unzipped) - ~500MB`);
                 console.log(`     • wikipedia-ios-source directory - ~2GB`);
-                console.log('     Note: You can always rebuild or extract from .zip later\n');
-
-                const removeApp = await askQuestion('  Remove Wikipedia.app and keep only .zip? (y/n): ');
-                if (removeApp === 'y' || removeApp === 'yes') {
-                    removeDirectory(destAppPath);
-                    console.log('     ✅ Removed Wikipedia.app (kept .zip)');
-                } else {
-                    console.log('     ℹ️  Keeping Wikipedia.app');
-                }
-
-                const removeSource = await askQuestion('  Remove wikipedia-ios-source directory? (y/n): ');
-                if (removeSource === 'y' || removeSource === 'yes') {
-                    removeDirectory(wikiRepoDir);
-                    console.log('     ✅ Removed wikipedia-ios-source directory');
-                    console.log('     💾 Saved ~2GB of disk space!');
-                } else {
-                    console.log('     ℹ️  Keeping wikipedia-ios-source directory');
-                    console.log('     🔄 You can rebuild the app later without re-downloading');
-                }
+                console.log('     Note: You can always rebuild or extract from .zip later');
+                console.log('     To remove these manually, run:');
+                console.log(`       rm -rf "${destAppPath}"`);
+                console.log(`       rm -rf "${wikiRepoDir}"`);
 
                 return true;
             } else {
@@ -507,7 +357,7 @@ async function main() {
         console.log('  ✅ Updated .gitignore');
     }
 
-    await promptForTestExecution();
+    displayTestCommands();
 }
 
 main().catch(console.error);

@@ -37,20 +37,20 @@ maintaining separate test suites with different tools and approaches. This templ
 ## Quick Start
 ___
 1. Clone this template
-2. Install dependencies (using `npm ci`)
-3. Download Android and iOS files using npm scripts
-    1. All apps: `npm run setup:apps`
-    2. Android *.apk file only: `npm run setup:apps:android`
-    3. iOS zipped *.app file only: `npm run setup:apps:ios`
-4. Launch tests either by agreeing to the last step of the interactive app setup or via npm scripts:
+2. Install dependencies (using `yarn install --immutable`)
+3. Download Android and iOS files using yarn scripts
+    1. All apps: `yarn setup:apps`
+    2. Android *.apk file only: `yarn setup:apps:android`
+    3. iOS zipped *.app file only: `yarn setup:apps:ios`
+4. Launch tests either by agreeing to the last step of the interactive app setup or via yarn scripts:
 
 | Command                       | Description                                       |
 |-------------------------------|---------------------------------------------------|
-| `npm run wdio:ios:native`     | iOS using native Wikipedia app                    |
-| `npm run wdio:ios:web`        | iOS using Wikipedia via mobile Safari browser     |
-| `npm run wdio:android:native` | Android using native Wikipedia app                |
-| `npm run wdio:android:web`    | Android using Wikipedia via mobile Chrome browser |
-| `npm run wdio:web:edge`       | Web tests using desktop Edge Browser              |
+| `yarn wdio:ios:native`        | iOS using native Wikipedia app                    |
+| `yarn wdio:ios:web`           | iOS using Wikipedia via mobile Safari browser     |
+| `yarn wdio:android:native`    | Android using native Wikipedia app                |
+| `yarn wdio:android:web`       | Android using Wikipedia via mobile Chrome browser |
+| `yarn wdio:web:edge`          | Web tests using desktop Edge Browser              |
 
 ## Table of Content
 
@@ -126,6 +126,8 @@ tests. If you don't want to perform iOS tests - feel free to use any OS of your 
 
 [`NodeJS (ver. 22.13.0)`](https://nodejs.org/en) - required for Appium & WebdriverIO
 
+[`Yarn (ver. 4.10.3)`](https://yarnpkg.com/) - required for package management (Yarn Berry)
+
 [`Appium Server (ver. 3.1.0)`](https://appium.io/docs/en/latest/quickstart/install/) - required to launch mobile tests (
 both Android & iOS) - or simply use the `npm install -g appium`
 
@@ -149,100 +151,87 @@ Managing multiple versions of development tools can be challenging, especially w
   sdk use java 17.0.13-tem
   ```
 
-- **[nvm (Node Version Manager)](https://github.com/nvm-sh/nvm)** - Manage Node.js versions
+- **[Volta](https://volta.sh/)** - Manage Node.js and Yarn versions seamlessly
   ```bash
-  # Install nvm
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+  # Install Volta
+  curl https://get.volta.sh | bash
   
   # Install Node.js 22.13.0
-  nvm install 22.13.0
+  volta install node@22.13.0
   
-  # Use specific Node.js version
-  nvm use 22.13.0
-  
-  # Set default version
-  nvm alias default 22.13.0
+  # Install Yarn 4.10.3
+  volta install yarn@4.10.3
   ```
 
 #### Windows Users
 
-- **[Scoop](https://scoop.sh/)** - Command-line installer for Windows (handles environment variables automatically)
+- **[winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/)** - Windows Package Manager (built into Windows 10/11)
   ```powershell
-  # Install Scoop (run in PowerShell)
-  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-  Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+  # winget comes pre-installed on Windows 10 (1809+) and Windows 11
   
   # Install Java
-  scoop bucket add java
-  scoop install openjdk17
-  
-  # Install Node.js
-  scoop install nodejs-lts
-  
-  # Install other tools
-  scoop install allure
-  ```
+  winget install Microsoft.OpenJDK.17
 
-- **[nvm-windows](https://github.com/coreybutler/nvm-windows)** - Node Version Manager for Windows
-  ```powershell
-  # Download installer from GitHub releases page
+- **[Volta](https://volta.sh/)** - Manage Node.js and Yarn versions seamlessly (cross-platform)
+- ```powershell
+  # Install Volta
+  winget install Volta.Volta
+  
   # After installation:
   
   # Install Node.js 22.13.0
-  nvm install 22.13.0
+  volta install node@22.13.0
   
-  # Use specific version
-  nvm use 22.13.0
+  # Install Yarn 4.10.3
+  volta install yarn@4.10.3
   ```
-
-- **[Chocolatey](https://chocolatey.org/)** - Alternative package manager for Windows
-  ```powershell
-  # Install Chocolatey (run in PowerShell as Administrator)
-  Set-ExecutionPolicy Bypass -Scope Process -Force
-  [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-  iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-  
-  # Install packages
-  choco install openjdk17
-  choco install nodejs-lts
-  choco install allure
-  ```
-
-**Benefits of using version managers:**
-- ✅ Automatically handles PATH and environment variables
-- ✅ Easy switching between different versions for different projects
-- ✅ No manual environment variable configuration needed
-- ✅ Simplified installation and updates
-- ✅ Better isolation between projects
 
 ### Wikipedia App files download
 
-For tests on all platforms you need to get the Wikipedia `*.apk` and `*.app.zip` files.
+To run mobile app tests, you'll need the Wikipedia application files. There are two ways to obtain them:
 
 #### Automated Setup (Recommended)
 
-For effortless setup use the automated script:
-- **All apps**: `npm run setup:apps`
-- **Android only**: `npm run setup:apps:android`
-- **iOS only** (macOS required): `npm run setup:apps:ios`
+The easiest way is to use the provided setup scripts. These will download, extract, and place the app files in the correct location automatically.
 
-The script will:
-- Download the Android APK automatically
-- Clone the Wikipedia iOS repository
-- Build the iOS app for simulator
-- Create a zipped version (required by WebdriverIO)
-- Optionally clean up build artifacts to save disk space
+**Run All Setup Steps:**
+```shell
+yarn setup:apps
+```
+This interactive script will guide you through:
+1. Downloading the Android APK file
+2. Downloading the iOS app file
+3. Build the iOS app for simulator and create a zipped version of it (required by WebdriverIO)
+4. Running your first test (optional)
+
+**Individual Setup Commands:**
+
+If you prefer to set up only specific platforms, use these commands:
+
+```shell
+# Android only
+yarn setup:apps:android
+
+# iOS only
+yarn setup:apps:ios
+```
+
+**Manual Verification:**
+
+After running the setup scripts, verify the files are in place:
+- Android APK: `./apps/android/wikipedia.apk`
+- iOS App: `./apps/ios/Wikipedia.app/`
 
 #### Manual Setup
 
-If the automated setup fails or you prefer manual installation:
+If you prefer to download and set up the files manually:
 
-**Android APK:**
-1. Download the Wikipedia APK from: https://releases.wikimedia.org/mobile/android/wikipedia/stable/
-2. Look for a file like `wikipedia-2.7.50552-r-2025-10-15.apk`
+**For Android:**
+1. Download the latest APK from [Wikipedia Android releases](https://releases.wikimedia.org/mobile/android/wikipedia/stable/)
+2. Rename it to `wikipedia.apk`
 3. Place it in `apps/android/wikipedia.apk`
 
-**iOS App (macOS only):**
+**For iOS (macOS only):**
 1. Ensure you have Xcode, Git, and Homebrew installed
 2. Clone the Wikipedia iOS repository:
    ```bash
@@ -298,54 +287,64 @@ ___
 
 ### Getting Started
 
-First of all, you have to install required packages.
+After completing the [Wikipedia App files download](#wikipedia-app-files-download) section, you're ready to run tests.
 
-```shell
-npm ci
-```
+**Note for CI/CD:** When setting up continuous integration, use `yarn install --immutable` to ensure dependencies match exactly what's in your `yarn.lock` file. This prevents unexpected dependency updates and ensures reproducible builds.
 
 ### Available Sample Tests
 
-| Command                       | Description                                       |
-|-------------------------------|---------------------------------------------------|
-| `npm run wdio:ios:native`     | iOS using native Wikipedia app                    |
-| `npm run wdio:ios:web`        | iOS using Wikipedia via mobile Safari browser     |
-| `npm run wdio:android:native` | Android using native Wikipedia app                |
-| `npm run wdio:android:web`    | Android using Wikipedia via mobile Chrome browser |
-| `npm run wdio:web:edge`       | Web tests using desktop Edge Browser              |
+This template includes pre-configured sample tests that demonstrate how to write cross-platform tests. Each test suite showcases different testing scenarios:
+
+| Command                       | Platform                | Browser/App             |
+|-------------------------------|-------------------------|-------------------------|
+| `yarn wdio:ios:native`        | iOS Simulator           | Native Wikipedia App    |
+| `yarn wdio:ios:web`           | iOS Simulator           | Mobile Safari           |
+| `yarn wdio:android:native`    | Android Emulator        | Native Wikipedia App    |
+| `yarn wdio:android:web`       | Android Emulator        | Chrome Mobile           |
+| `yarn wdio:web:edge`          | Desktop                 | Microsoft Edge          |
+
+**What the sample tests do:**
+- Navigate to Wikipedia (via app or browser)
+- Search for articles
+- Verify search results
+- Demonstrate platform-specific element interactions
+- Show cross-platform selector usage
+
+These tests serve as both a validation of your setup and templates for writing your own tests.
 
 ### Web Tests
 
-To run web-based tests you just need to make sure that you have the desired browser installed on either
-your local machine or CI/CD platform.
+**Pre-requisites:**
 
-**Note:** Web tests run in headless mode by default (browser window is not visible). If you want to see what the tests are doing in real-time:
-1. Open `wdio.web.edge.conf.ts` (or your respective browser config file)
-2. Find the `--headless` flag in the browser capabilities
-3. Comment out or delete the `--headless` flag
-4. Save and run your tests again
+Install one of the below browsers that you want to use for testing, like:
+
+- Microsoft Edge (used in example)
+- Google Chrome
+- Mozilla Firefox
+
+Note: **Safari** it's pre-installed on macOS. In Safari 18 or later, open the Settings app. Go to Apps > Safari > Advanced,
+then turn on `Allow remote automation`.
 
 ### After Test Run
 
-Once your tests has been launched, you can see the results in the console/terminal.
-But, if you'd like to see more detailed report, use the `allure serve` command to launch the Allure Report locally.
+After running any test suite, test results are automatically saved in the `allure-results` directory. You can view detailed test reports using the commands described in the [Reporting](#reporting) section.
 
 ## Writing Tests
 ___
 
 ### Selectors
 
-Within this framework selectors/locators are placed in one shared location [
-`test/common/selectors.ts`](./test/common/selectors.ts).
+This framework uses a centralized selector management system that allows you to define platform-specific selectors in one place and use them across your entire test suite.
+
+**Selector File Location:** `./test/common/selectors.ts`
+
+All selectors are stored in the `selectors` object, organized by page/feature. Each selector can have up to four platform-specific variants to support different environments:
 
 ### Available Selectors
 
-The list of available keys is defined by the type `Selector` within the
-[`test/common/sharedCommands.ts`](./test/common/sharedCommands.ts), hence possible selectors are:
-
-| Key             | Type     | Related Platform                                 |
+| Selector Key    | Type     | Description                                      |
 |-----------------|----------|--------------------------------------------------|
-| `android`       | `string` | Android                                          |
+| `android`       | `string` | Android native app                               |
 | `ios`           | `string` | iOS (iPhone / iPad)                              |
 | `mobileBrowser` | `string` | Mobile Browser (Android - Chrome / iOS - Safari) |
 | `web`           | `string` | Desktop Browser (Windows / macOS / Linux)        |
