@@ -261,8 +261,8 @@ async function setupIOSApp() {
                 return false;
             }
 
-            console.log('  Creating Wikipedia.app.zip for distribution...');
-            const zipPath = path.join(iosDir, 'Wikipedia.app.zip');
+            console.log('  Creating wikipedia.app.zip for distribution...');
+            const zipPath = path.join(iosDir, 'wikipedia.app.zip');
             const zipCreated = await createZipArchive(destAppPath, zipPath);
 
             if (zipCreated) {
