@@ -220,7 +220,7 @@ yarn setup:apps:ios
 
 After running the setup scripts, verify the files are in place:
 - Android APK: `./apps/android/wikipedia.apk`
-- iOS App: `./apps/ios/Wikipedia.app/`
+- iOS App: `./apps/ios/wikipedia.app.zip/`
 
 #### Manual Setup
 
@@ -253,7 +253,7 @@ If you prefer to download and set up the files manually:
 7. Create a zip (required by WebdriverIO):
    ```bash
    cd apps/ios
-   zip -qr Wikipedia.app.zip Wikipedia.app
+   zip -qr wikipedia.app.zip Wikipedia.app
    ```
 
 **Note:** WebdriverIO requires iOS apps to be in `.zip` format for simulator testing.
