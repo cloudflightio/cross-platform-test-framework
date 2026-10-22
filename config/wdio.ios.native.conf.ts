@@ -15,8 +15,8 @@ export const config = deepmerge(
         platformName: 'iOS',
         maxInstances: 1,
         'appium:options': {
-          deviceName: 'iPad Pro 13-inch (M4)',
-          platformVersion: '18.5',
+          deviceName: 'iPad Pro 13-inch (M5)',
+          platformVersion: '27.0',
           orientation: 'LANDSCAPE',
           automationName: 'XCUITest',
           app: join(process.cwd(), './apps/ios/wikipedia.app.zip'),
@@ -26,6 +26,7 @@ export const config = deepmerge(
           appWaitForLaunch: true,
           noReset: false,
           fullReset: false,
+          isHeadless: true,
         }
       },
     ],

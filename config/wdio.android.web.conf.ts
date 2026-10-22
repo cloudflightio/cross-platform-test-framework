@@ -2,9 +2,10 @@ import {join} from "path";
 
 import {deepmerge} from 'deepmerge-ts';
 
-import {config as wdioConf} from './wdio.appium.shared.conf';
+import {config as wdioConf} from './wdio.appium.shared.conf.ts';
 
 // https://webdriver.io/docs/organizingsuites#inherit-from-main-config-file
+// The `appium` service (incl. chromedriver_autodownload) is configured in wdio.appium.shared.conf.ts
 export const config = deepmerge(
   wdioConf,
   {
@@ -18,18 +19,9 @@ export const config = deepmerge(
         'appium:avd': 'Pixel_9_Pro_XL',
         'appium:platformVersion': '15.0',
         'appium:automationName': 'UiAutomator2',
+        // Chromedriver binaries downloaded by Appium are stored here (git-ignored)
         'appium:chromedriverExecutableDir': join(process.cwd(), './drivers/'),
       }
-    ],
-    services: [
-      [
-        'appium',
-        {
-          args: {
-            allowInsecure: 'uiautomator2:chromedriver_autodownload',
-          },
-        }
-      ],
     ],
   },
   {clone: false}

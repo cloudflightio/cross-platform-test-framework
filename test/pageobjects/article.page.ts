@@ -9,21 +9,23 @@ import {
 
 export const articlePage = {
   // region ELEMENTS
-  pageTitle: () => select({
-    ...selectors.articlePage.pageTitle,
-    iosSelectionMethod: getByClassChain,
-  }),
+  pageTitle: (pageTitle: string) =>
+    select({
+      ...selectors.articlePage.pageTitle,
+      variables: {pageTitle: `${pageTitle}`},
+      iosSelectionMethod: getByClassChain,
+    }),
   // endregion ELEMENTS
   // region ACTIONS
   async waitForPageLoad(): Promise<void> {
     await waitUntilElementsAreLoaded(
       'Article page',
-      this.pageTitle()
+      this.pageTitle('Software testing')
     )
   },
   async getPageTitle(): Promise<string> {
     await addStepAndLog("Get page title");
-    return getTextFromElement(await this.pageTitle());
+    return getTextFromElement(this.pageTitle('Software testing'));
   }
   // endregion ACTIONS
 }

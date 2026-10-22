@@ -1,11 +1,31 @@
-const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 const os = require('os');
+const { Readable } = require('stream');
+const { pipeline } = require('stream/promises');
+const { execSync } = require('child_process');
 
 const isWindows = os.platform() === 'win32';
 const isMac = os.platform() === 'darwin';
+
+const USER_AGENT =
+    'Wikipedia-Test-Setup-Script/1.0 (WebdriverIO Testing Framework; https://github.com/cloudflightio/cross-platform-test-framework)';
+
+// The Android APK is pinned on purpose: the sample tests depend on the app UI,
+// so a newer release may break the selectors. Override with WIKIPEDIA_APK_URL if needed.
+const ANDROID_RELEASES_URL = 'https://releases.wikimedia.org/mobile/android/wikipedia/stable/';
+const ANDROID_APK_URL =
+    process.env.WIKIPEDIA_APK_URL || `${ANDROID_RELEASES_URL}wikipedia-2.7.50552-r-2025-10-15.apk`;
+
+const ROOT_DIR = path.join(__dirname, '..');
+const ANDROID_DIR = path.join(ROOT_DIR, 'apps', 'android');
+const ANDROID_APK = path.join(ANDROID_DIR, 'wikipedia.apk');
+
+const IOS_DIR = path.join(ROOT_DIR, 'apps', 'ios');
+const IOS_SOURCE_DIR = path.join(IOS_DIR, 'wikipedia-ios-source');
+const IOS_APP_NAME = 'Wikipedia.app';
+const IOS_APP = path.join(IOS_DIR, IOS_APP_NAME);
+const IOS_ZIP = path.join(IOS_DIR, 'wikipedia.app.zip');
 
 function displayTestCommands() {
     console.log('\n📚 Available Test Commands:\n');
@@ -20,40 +40,28 @@ function displayTestCommands() {
     console.log('  For more information, check the README.md file.');
 }
 
+/**
+ * Downloads a file (following redirects) to a temporary file first,
+ * so an interrupted download never leaves a broken file at `dest`.
+ */
 async function downloadFile(url, dest) {
-    const file = fs.createWriteStream(dest);
-
-    return new Promise((resolve, reject) => {
-        const urlObj = new URL(url);
-        const options = {
-            hostname: urlObj.hostname,
-            path: urlObj.pathname + urlObj.search,
-            headers: {
-                'User-Agent': 'Wikipedia-Test-Setup-Script/1.0 (WebdriverIO Testing Framework; https://github.com/cloudflightio/cross-platform-test-framework)'
-            }
-        };
-
-        https.get(options, (response) => {
-            if (response.statusCode === 302 || response.statusCode === 301) {
-                const redirectUrl = response.headers.location;
-                downloadFile(redirectUrl, dest).then(resolve).catch(reject);
-            } else if (response.statusCode === 200) {
-                response.pipe(file);
-                file.on('finish', () => {
-                    file.close();
-                    resolve();
-                });
-            } else {
-                file.close();
-                fs.unlinkSync(dest);
-                reject(new Error(`Failed to download: HTTP ${response.statusCode}`));
-            }
-        }).on('error', (err) => {
-            file.close();
-            fs.unlinkSync(dest);
-            reject(err);
-        });
+    const response = await fetch(url, {
+        headers: { 'User-Agent': USER_AGENT },
+        redirect: 'follow',
     });
+
+    if (!response.ok || !response.body) {
+        throw new Error(`Failed to download ${url}: HTTP ${response.status}`);
+    }
+
+    const tempDest = `${dest}.part`;
+    try {
+        await pipeline(Readable.fromWeb(response.body), fs.createWriteStream(tempDest));
+        fs.renameSync(tempDest, dest);
+    } catch (error) {
+        fs.rmSync(tempDest, { force: true });
+        throw error;
+    }
 }
 
 function runCommand(command, options = {}) {
@@ -81,9 +89,7 @@ function checkCommand(command, commandName) {
 
 function copyDirectory(src, dest) {
     try {
-        if (fs.existsSync(dest)) {
-            fs.rmSync(dest, { recursive: true, force: true });
-        }
+        fs.rmSync(dest, { recursive: true, force: true });
         fs.cpSync(src, dest, { recursive: true });
         return true;
     } catch (error) {
@@ -92,89 +98,96 @@ function copyDirectory(src, dest) {
     }
 }
 
-function createZipArchive(sourceDir, zipPath) {
-    if (!isMac) {
-        console.log('  ⚠️  Zip creation only supported on macOS');
-        return false;
-    }
+/**
+ * Zips `appDir` into `zipPath`. Both must be in the same directory.
+ */
+function createZipArchive(appDir, zipPath) {
+    fs.rmSync(zipPath, { force: true });
 
-    try {
-        const appName = path.basename(sourceDir);
-        if (fs.existsSync(zipPath)) {
-            fs.unlinkSync(zipPath);
-        }
-
-        const parentDir = path.dirname(sourceDir);
-        runCommand(`cd "${parentDir}" && zip -r "${path.basename(zipPath)}" "${appName}"`, {
-            cwd: parentDir
-        });
-
-        console.log(`  ✅ Created zip archive: ${zipPath}`);
-        return true;
-    } catch (error) {
-        console.error(`  ❌ Failed to create zip: ${error.message}`);
-        return false;
-    }
-}
-
-function findApp(searchDir, targetName) {
-    let resultPath = null;
-
-    function search(dir) {
-        try {
-            const items = fs.readdirSync(dir);
-
-            for (const item of items) {
-                if (item === '.git' || item === 'node_modules') continue;
-
-                const itemPath = path.join(dir, item);
-                try {
-                    const stat = fs.statSync(itemPath);
-
-                    if (item === targetName && stat.isDirectory()) {
-                        resultPath = itemPath;
-                        return true;
-                    }
-
-                    if (stat.isDirectory() && !resultPath) {
-                        if (search(itemPath)) return true;
-                    }
-                } catch (err) {
-                    // continue;
-                }
-            }
-        } catch (err) {
-            return false;
-        }
-        return false;
-    }
-
-    search(searchDir);
-    return resultPath;
+    return runCommand(`zip -qr "${path.basename(zipPath)}" "${path.basename(appDir)}"`, {
+        cwd: path.dirname(appDir),
+    });
 }
 
 async function setupAndroidApp() {
     console.log('\n🤖 Setting up Android App...');
 
-    const androidDir = path.join(__dirname, '..', 'apps', 'android');
-    if (!fs.existsSync(androidDir)) {
-        fs.mkdirSync(androidDir, { recursive: true });
-    }
+    fs.mkdirSync(ANDROID_DIR, { recursive: true });
 
-    console.log('  Downloading Wikipedia Android APK...');
-    const apkUrl = 'https://releases.wikimedia.org/mobile/android/wikipedia/stable/wikipedia-2.7.50552-r-2025-10-15.apk';
-    const apkDest = path.join(androidDir, 'wikipedia.apk');
+    console.log(`  Downloading Wikipedia Android APK from ${ANDROID_APK_URL}...`);
 
     try {
-        await downloadFile(apkUrl, apkDest);
+        await downloadFile(ANDROID_APK_URL, ANDROID_APK);
         console.log('  ✅ Android APK downloaded successfully!');
-        console.log(`  📍 Location: ${apkDest}`);
+        console.log(`  📍 Location: ${ANDROID_APK}`);
         return true;
     } catch (error) {
         console.error('  ❌ Failed to download Android APK:', error.message);
-        console.log('  Please download manually from: https://releases.wikimedia.org/mobile/android/wikipedia/stable/');
+        console.log(`  Please download it manually from: ${ANDROID_RELEASES_URL}`);
+        console.log(`  and save it as: ${ANDROID_APK}`);
+        console.log('  (or set WIKIPEDIA_APK_URL to a different release and run the script again)');
         return false;
     }
+}
+
+// Shared by the build and by the build-settings query, so both resolve to the same output location.
+// A generic simulator destination does not depend on a specific iOS version / device name.
+const IOS_BUILD_ARGS = [
+    '-project Wikipedia.xcodeproj',
+    '-scheme Wikipedia',
+    '-configuration Debug',
+    '-sdk iphonesimulator',
+    '-destination "generic/platform=iOS Simulator"',
+].join(' ');
+
+/**
+ * Asks xcodebuild where it puts the built app, instead of guessing the DerivedData location.
+ * The location depends on the Xcode version and on the project's workspace settings
+ * (e.g., newer Xcode versions may place DerivedData inside the source directory).
+ * @returns {string | null} Absolute path to Wikipedia.app or null if it cannot be determined.
+ */
+function getBuiltAppPath() {
+    try {
+        const output = execSync(`xcodebuild ${IOS_BUILD_ARGS} -showBuildSettings -json`, {
+            cwd: IOS_SOURCE_DIR,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+            maxBuffer: 64 * 1024 * 1024,
+        });
+
+        // The scheme contains several targets (app extensions, widgets...) - pick the main app
+        const appSettings = JSON.parse(output)
+            .map((entry) => entry.buildSettings)
+            .find((settings) => settings?.FULL_PRODUCT_NAME === IOS_APP_NAME);
+
+        if (!appSettings?.TARGET_BUILD_DIR) {
+            return null;
+        }
+
+        return path.join(appSettings.TARGET_BUILD_DIR, appSettings.FULL_PRODUCT_NAME);
+    } catch (error) {
+        console.error(`  ⚠️  Could not read build settings: ${error.message}`);
+        return null;
+    }
+}
+
+/**
+ * Returns the DerivedData root for a built product path (…/DerivedData/Build/Products/… → …/DerivedData).
+ */
+function getDerivedDataRoot(builtAppPath) {
+    const marker = `${path.sep}Build${path.sep}Products${path.sep}`;
+    const index = builtAppPath.indexOf(marker);
+    return index === -1 ? null : builtAppPath.slice(0, index);
+}
+
+function printIOSManualInstructions() {
+    console.log('  Manual build instructions:');
+    console.log(`    1. cd "${IOS_SOURCE_DIR}"`);
+    console.log('    2. ./scripts/setup');
+    console.log(`    3. xcodebuild ${IOS_BUILD_ARGS} build`);
+    console.log(`    4. xcodebuild ${IOS_BUILD_ARGS} -showBuildSettings | grep " TARGET_BUILD_DIR ="`);
+    console.log(`    5. Copy ${IOS_APP_NAME} from that directory to "${IOS_DIR}"`);
+    console.log(`    6. cd "${IOS_DIR}" && zip -qr wikipedia.app.zip ${IOS_APP_NAME}`);
 }
 
 async function setupIOSApp() {
@@ -184,13 +197,14 @@ async function setupIOSApp() {
         console.log('  ⚠️  iOS app building requires macOS.');
         console.log('  📝 For iOS testing on non-macOS systems:');
         console.log('     1. Build the app on a Mac');
-        console.log('     2. Copy Wikipedia.app to apps/ios/');
+        console.log(`     2. Copy wikipedia.app.zip to ${IOS_DIR}`);
         return false;
     }
 
     console.log('  Checking prerequisites...');
     const hasXcode = checkCommand('xcodebuild', 'Xcode');
     const hasGit = checkCommand('git', 'Git');
+    const hasZip = checkCommand('zip', 'zip');
 
     if (!hasXcode) {
         console.log('  ⚠️  Please install Xcode from the Mac App Store');
@@ -198,26 +212,21 @@ async function setupIOSApp() {
         return false;
     }
 
-    if (!hasGit) {
-        console.log('  ⚠️  Git is required. Please install Git first.');
+    if (!hasGit || !hasZip) {
+        console.log('  ⚠️  Git and zip are required. Please install the missing tools first.');
         return false;
     }
 
-    const iosDir = path.join(__dirname, '..', 'apps', 'ios');
-    const wikiRepoDir = path.join(iosDir, 'wikipedia-ios-source');
+    fs.mkdirSync(IOS_DIR, { recursive: true });
 
-    if (!fs.existsSync(iosDir)) {
-        fs.mkdirSync(iosDir, { recursive: true });
-    }
-
-    if (fs.existsSync(wikiRepoDir)) {
+    if (fs.existsSync(IOS_SOURCE_DIR)) {
         console.log('  Updating existing Wikipedia iOS repository...');
-        runCommand('git pull', { cwd: wikiRepoDir });
+        runCommand('git pull', { cwd: IOS_SOURCE_DIR });
     } else {
         console.log('  Cloning Wikipedia iOS repository (this may take a minute)...');
         const cloned = runCommand(
-            'git clone --depth 1 https://github.com/wikimedia/wikipedia-ios.git wikipedia-ios-source',
-            { cwd: iosDir }
+            `git clone --depth 1 https://github.com/wikimedia/wikipedia-ios.git "${path.basename(IOS_SOURCE_DIR)}"`,
+            { cwd: IOS_DIR }
         );
         if (!cloned) {
             console.log('  ❌ Failed to clone repository');
@@ -227,77 +236,55 @@ async function setupIOSApp() {
 
     console.log('  Running Wikipedia iOS setup script...');
     console.log('  This will install SwiftLint, ClangFormat, and other dependencies...');
-    const setupSuccess = runCommand('./scripts/setup', { cwd: wikiRepoDir });
-
-    if (!setupSuccess) {
+    if (!runCommand('./scripts/setup', { cwd: IOS_SOURCE_DIR })) {
         console.log('  ❌ Setup script failed');
-        console.log('  Try running manually:');
-        console.log(`    cd ${wikiRepoDir}`);
-        console.log('    ./scripts/setup');
+        printIOSManualInstructions();
         return false;
     }
 
     console.log('  Building Wikipedia app for iOS Simulator...');
     console.log('  ⏳ This will take several minutes on first build...');
 
-    const buildCommand = `xcodebuild -project Wikipedia.xcodeproj -scheme Wikipedia -configuration Debug -sdk iphonesimulator -destination "platform=iphonesimulator,OS=18.5,name=iPhone 16 Pro" build`;
-
-    const built = runCommand(buildCommand, { cwd: wikiRepoDir });
-
-    if (built) {
-        console.log('  ✅ iOS app built successfully!');
-
-        const appPath = findApp(iosDir, 'Wikipedia.app');
-
-        if (appPath) {
-            const destAppPath = path.join(iosDir, 'Wikipedia.app');
-            console.log(`  📦 Copying app to standardized location...`);
-
-            const copied = copyDirectory(appPath, destAppPath);
-            if (copied) {
-                console.log(`  ✅ App copied to: ${destAppPath}`);
-            } else {
-                console.log(`  ❌ Failed to copy app`);
-                return false;
-            }
-
-            console.log('  Creating wikipedia.app.zip for distribution...');
-            const zipPath = path.join(iosDir, 'wikipedia.app.zip');
-            const zipCreated = await createZipArchive(destAppPath, zipPath);
-
-            if (zipCreated) {
-                console.log(`  ✅ Created: ${zipPath}`);
-
-                console.log('\n  💡 Cleanup Information:');
-                console.log('     The following can be removed to save disk space:');
-                console.log(`     • Wikipedia.app (unzipped) - ~500MB`);
-                console.log(`     • wikipedia-ios-source directory - ~2GB`);
-                console.log('     Note: You can always rebuild or extract from .zip later');
-                console.log('     To remove these manually, run:');
-                console.log(`       rm -rf "${destAppPath}"`);
-                console.log(`       rm -rf "${wikiRepoDir}"`);
-
-                return true;
-            } else {
-                console.log('  ❌ Failed to create zip file');
-                return false;
-            }
-        } else {
-            console.log('  ❌ Could not find built app');
-            console.log('  The build succeeded but the app location is unexpected.');
-        }
+    if (!runCommand(`xcodebuild ${IOS_BUILD_ARGS} build`, { cwd: IOS_SOURCE_DIR })) {
+        console.log('  ❌ Build failed.');
+        printIOSManualInstructions();
+        return false;
     }
 
-    console.log('  ❌ Build or post-processing failed.');
-    console.log('  Manual build instructions:');
-    console.log(`    1. cd ${wikiRepoDir}`);
-    console.log('    2. open Wikipedia.xcodeproj');
-    console.log('    3. Select Wikipedia scheme and iPhone simulator');
-    console.log('    4. Build in Xcode (Cmd+B)');
-    console.log(`    5. Find the built app (usually in DerivedData/Build/Products/Debug-iphonesimulator/)`);
-    console.log(`    6. Copy Wikipedia.app to ${iosDir}/Wikipedia.app`);
+    console.log('  🔎 Locating the built app...');
+    const builtAppPath = getBuiltAppPath();
 
-    return false;
+    if (!builtAppPath || !fs.existsSync(builtAppPath)) {
+        console.log(`  ❌ Build succeeded, but the app was not found${builtAppPath ? ` at: ${builtAppPath}` : ''}`);
+        printIOSManualInstructions();
+        return false;
+    }
+
+    console.log('  ✅ iOS app built successfully!');
+    console.log(`  📍 Build output: ${builtAppPath}`);
+    console.log('  📦 Copying app to standardized location...');
+    if (!copyDirectory(builtAppPath, IOS_APP)) {
+        return false;
+    }
+
+    console.log('  Creating wikipedia.app.zip (required by WebdriverIO)...');
+    if (!createZipArchive(IOS_APP, IOS_ZIP)) {
+        console.log('  ❌ Failed to create zip file');
+        return false;
+    }
+    console.log(`  ✅ Created: ${IOS_ZIP}`);
+
+    console.log('\n  💡 Cleanup Information:');
+    console.log('     Only wikipedia.app.zip is used by the tests. The following can be removed to save disk space:');
+    console.log(`       rm -rf "${IOS_APP}"`);
+    const derivedDataRoot = getDerivedDataRoot(builtAppPath);
+    if (derivedDataRoot) {
+        console.log(`       rm -rf "${derivedDataRoot}"`);
+    }
+    console.log(`       rm -rf "${IOS_SOURCE_DIR}"`);
+    console.log('     (they will be recreated the next time you run this script)');
+
+    return true;
 }
 
 async function main() {
@@ -308,6 +295,7 @@ async function main() {
     const androidOnly = args.includes('--android-only');
     const iosOnly = args.includes('--ios-only');
 
+    // Platforms that are skipped count as successful
     let androidSuccess = true;
     let iosSuccess = true;
 
@@ -328,36 +316,20 @@ async function main() {
         console.log('  iOS:', iosSuccess ? '✅ Ready' : '⚠️  Needs manual setup');
     }
 
-    const allSuccess = (!iosOnly || iosSuccess) && (!androidOnly || androidSuccess);
-
-    if (allSuccess) {
+    if (androidSuccess && iosSuccess) {
         console.log('\n✨ All requested apps are ready for testing!');
         console.log('\n📍 App locations:');
-        if (!iosOnly) console.log('  Android: apps/android/wikipedia.apk');
-        if (!androidOnly) {
-            if (fs.existsSync(path.join(__dirname, '..', 'apps', 'ios', 'Wikipedia.app'))) {
-                console.log('  iOS: apps/ios/Wikipedia.app');
-            } else {
-                console.log('  iOS: apps/ios/Wikipedia.app.zip (extract before use)');
-            }
-        }
+        if (!iosOnly) console.log(`  Android: ${path.relative(ROOT_DIR, ANDROID_APK)}`);
+        if (!androidOnly) console.log(`  iOS:     ${path.relative(ROOT_DIR, IOS_ZIP)}`);
     } else {
         console.log('\n⚠️  Some apps need manual setup. Check the messages above.');
-    }
-
-    const gitignorePath = path.join(__dirname, '..', '.gitignore');
-    const gitignoreContent = fs.existsSync(gitignorePath)
-        ? fs.readFileSync(gitignorePath, 'utf8')
-        : '';
-
-    if (!gitignoreContent.includes('apps/')) {
-        console.log('\n📝 Adding apps/ to .gitignore...');
-        const gitignoreAddition = '\n# Test Applications\napps/\n*.apk\n*.ipa\n*.app\n*.app.zip\nDerivedData/\n';
-        fs.appendFileSync(gitignorePath, gitignoreAddition);
-        console.log('  ✅ Updated .gitignore');
+        process.exitCode = 1;
     }
 
     displayTestCommands();
 }
 
-main().catch(console.error);
+main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+});

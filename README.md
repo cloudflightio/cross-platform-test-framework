@@ -1,4 +1,4 @@
-# End-to-End Cross-Platform Testing Template (WebdriverIO v9 / TypeScript)
+# End-to-End Cross-Platform Testing Template (WebdriverIO v10 / TypeScript)
 
 ## What is this?
 ___
@@ -23,7 +23,7 @@ maintaining separate test suites with different tools and approaches. This templ
 ### Key Features
 
 - ✅ **Multi-platform support**: Desktop browsers, mobile browsers, Android native apps, iOS native apps
-- ✅ **Modern tech stack**: WebdriverIO v9, TypeScript, Appium 3.x
+- ✅ **Modern tech stack**: WebdriverIO v10, TypeScript, Appium 3.x
 - ✅ **Smart selector system**: Platform-aware selector management with variable support
 - ✅ **Reporting out of the box**: Includes Allure reporting
 - ✅ **Well-structured**: Well-known Page Object Model pattern with shared commands and utilities
@@ -37,12 +37,12 @@ maintaining separate test suites with different tools and approaches. This templ
 ## Quick Start
 ___
 1. Clone this template
-2. Install dependencies (using `yarn install --immutable`)
-3. Download Android and iOS files using yarn scripts
+2. Install dependencies: `yarn install --immutable`
+3. Download / build the Wikipedia apps using yarn scripts:
     1. All apps: `yarn setup:apps`
-    2. Android *.apk file only: `yarn setup:apps:android`
-    3. iOS zipped *.app file only: `yarn setup:apps:ios`
-4. Launch tests either by agreeing to the last step of the interactive app setup or via yarn scripts:
+    2. Android `*.apk` file only: `yarn setup:apps:android`
+    3. iOS zipped `*.app` file only: `yarn setup:apps:ios`
+4. Launch tests via yarn scripts:
 
 | Command                       | Description                                       |
 |-------------------------------|---------------------------------------------------|
@@ -52,17 +52,17 @@ ___
 | `yarn wdio:android:web`       | Android using Wikipedia via mobile Chrome browser |
 | `yarn wdio:web:edge`          | Web tests using desktop Edge Browser              |
 
-## Table of Content
+## Table of Contents
 
 ___
 <!-- TOC -->
-* [End-to-End Cross-Platform Testing Template (WebdriverIO v9 / TypeScript)](#end-to-end-cross-platform-testing-template-webdriverio-v9--typescript)
+* [End-to-End Cross-Platform Testing Template (WebdriverIO v10 / TypeScript)](#end-to-end-cross-platform-testing-template-webdriverio-v10--typescript)
   * [What is this?](#what-is-this)
     * [Purpose](#purpose)
     * [Key Features](#key-features)
     * [Who is this for?](#who-is-this-for)
   * [Quick Start](#quick-start)
-  * [Table of Content](#table-of-content)
+  * [Table of Contents](#table-of-contents)
   * [Test Applications](#test-applications)
   * [Prerequisites](#prerequisites)
     * [General requirements](#general-requirements)
@@ -90,6 +90,7 @@ ___
     * [Allure Report](#allure-report)
   * [Known Issues](#known-issues)
     * [iOS Simulator Not Responding](#ios-simulator-not-responding)
+  * [License](#license)
 <!-- TOC -->
 
 ## Test Applications
@@ -100,42 +101,45 @@ This project uses the following applications for testing examples:
 - **Wikipedia for Android** (Apache 2.0) - Available at https://github.com/wikimedia/apps-android-wikipedia
 - **Wikipedia for iOS** (MIT) - Available at https://github.com/wikimedia/wikipedia-ios
 
-These apps are used solely for demonstration and testing purposes.
+These apps are used solely for demonstration and testing purposes. This project is not affiliated with or endorsed by
+the Wikimedia Foundation.
 For information about how to obtain them refer to the [Wikipedia App files download](#wikipedia-app-files-download) section.
 
 ## Prerequisites
 ___
 
-For Android and/or iOS tests make sure that you have installed prerequisites mentioned below, and that you have setup up
-simulators accordingly to the following:
+For Android and/or iOS tests make sure that you have installed the prerequisites mentioned below, and that you have set up
+the emulators/simulators according to the following:
 
 Android:
-1. Launch Virtual Device Manager setup
-2. Device: `Pixel 9 Pro XL`
+1. Launch the Virtual Device Manager in Android Studio
+2. Device: `Pixel 9 Pro XL` (AVD name: `Pixel_9_Pro_XL`)
 3. API Version: `API 35 "VanillaIceCream"; Android 15.0`
 
 iOS:
-1. Launch the XCode at least once, and open the Simulator app
-2. Verify that you have version `18.5`
-3. Verify that you have both `iPad Pro 13-inch (M4)` & `iPhone 16 Pro`
+1. Launch Xcode at least once, and open the Simulator app
+2. Verify that you have the iOS `27.0` simulator runtime installed (Xcode → Settings → Components)
+3. Verify that you have both `iPad Pro 13-inch (M5)` & `iPhone 18 Pro` simulators
 
 ### General requirements
 
-`macOS (ver. Sequoia 15.6.1)` - it is required to use macOS in order to launch [`iOS/Safari`](#iossafari-tests)
-tests. If you don't want to perform iOS tests - feel free to use any OS of your choice.
+`macOS Tahoe 26.6 or later on an Apple silicon Mac` - required to launch [`iOS/Safari`](#iossafari-tests) tests
+(Xcode 27 does not run on Intel Macs). If you don't want to perform iOS tests — feel free to use any OS of your choice.
 
-[`NodeJS (ver. 22.13.0)`](https://nodejs.org/en) - required for Appium & WebdriverIO
+[`Node.js (ver. 22.15.0 or later)`](https://nodejs.org/en) - required for Appium & WebdriverIO
 
-[`Yarn (ver. 4.10.3)`](https://yarnpkg.com/) - required for package management (Yarn Berry)
+[`Yarn (ver. 4.18.1)`](https://yarnpkg.com/) - required for package management (Yarn Berry)
 
-[`Appium Server (ver. 3.1.0)`](https://appium.io/docs/en/latest/quickstart/install/) - required to launch mobile tests (
-both Android & iOS) - or simply use the `npm install -g appium`
+[`Appium Server (ver. 3.x)`](https://appium.io/docs/en/latest/quickstart/install/) - required to launch mobile tests
+(both Android & iOS) - or simply use `npm install -g appium`
 
-[`Allure Report`](https://allurereport.org/docs/gettingstarted-installation/) - required to generate after test reports
+[`Allure Report`](https://allurereport.org/docs/gettingstarted-installation/) - the Allure command line is installed
+with the project dependencies (`yarn report`); Java is required to run it
 
 ### Version Management Tools (Recommended)
 
-Managing multiple versions of development tools can be challenging, especially when dealing with environment variables and PATH configurations. We strongly recommend using version managers to simplify this process:
+Managing multiple versions of development tools can be challenging, especially when dealing with environment variables
+and PATH configurations. We strongly recommend using version managers to simplify this process:
 
 #### macOS/Linux Users
 
@@ -143,10 +147,10 @@ Managing multiple versions of development tools can be challenging, especially w
   ```bash
   # Install SDKMAN!
   curl -s "https://get.sdkman.io" | bash
-  
+
   # Install Java 17
   sdk install java 17.0.13-tem
-  
+
   # Switch between Java versions
   sdk use java 17.0.13-tem
   ```
@@ -155,12 +159,12 @@ Managing multiple versions of development tools can be challenging, especially w
   ```bash
   # Install Volta
   curl https://get.volta.sh | bash
-  
+
   # Install Node.js 22.13.0
   volta install node@22.13.0
-  
-  # Install Yarn 4.10.3
-  volta install yarn@4.10.3
+
+  # Install Yarn 4.18.1
+  volta install yarn@4.18.1
   ```
 
 #### Windows Users
@@ -168,22 +172,23 @@ Managing multiple versions of development tools can be challenging, especially w
 - **[winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/)** - Windows Package Manager (built into Windows 10/11)
   ```powershell
   # winget comes pre-installed on Windows 10 (1809+) and Windows 11
-  
+
   # Install Java
   winget install Microsoft.OpenJDK.17
+  ```
 
 - **[Volta](https://volta.sh/)** - Manage Node.js and Yarn versions seamlessly (cross-platform)
-- ```powershell
+  ```powershell
   # Install Volta
   winget install Volta.Volta
-  
+
   # After installation:
-  
-  # Install Node.js 22.13.0
-  volta install node@22.13.0
-  
-  # Install Yarn 4.10.3
-  volta install yarn@4.10.3
+
+  # Install Node.js 22.15.0
+  volta install node@22.15.0
+
+  # Install Yarn 4.18.1
+  volta install yarn@4.18.1
   ```
 
 ### Wikipedia App files download
@@ -192,17 +197,19 @@ To run mobile app tests, you'll need the Wikipedia application files. There are 
 
 #### Automated Setup (Recommended)
 
-The easiest way is to use the provided setup scripts. These will download, extract, and place the app files in the correct location automatically.
+The easiest way is to use the provided setup script. It will download / build the apps and place the files in the
+correct location automatically.
 
 **Run All Setup Steps:**
 ```shell
 yarn setup:apps
 ```
-This interactive script will guide you through:
-1. Downloading the Android APK file
-2. Downloading the iOS app file
-3. Build the iOS app for simulator and create a zipped version of it (required by WebdriverIO)
-4. Running your first test (optional)
+This script will:
+1. Download the Android APK file (a pinned release that the sample tests were written against)
+2. Clone the Wikipedia iOS repository and install its build dependencies (macOS only)
+3. Build the iOS app for the simulator and create a zipped version of it (required by WebdriverIO)
+
+To use a different Android release, set the `WIKIPEDIA_APK_URL` environment variable before running the script.
 
 **Individual Setup Commands:**
 
@@ -220,14 +227,15 @@ yarn setup:apps:ios
 
 After running the setup scripts, verify the files are in place:
 - Android APK: `./apps/android/wikipedia.apk`
-- iOS App: `./apps/ios/wikipedia.app.zip/`
+- iOS App: `./apps/ios/wikipedia.app.zip`
 
 #### Manual Setup
 
 If you prefer to download and set up the files manually:
 
 **For Android:**
-1. Download the latest APK from [Wikipedia Android releases](https://releases.wikimedia.org/mobile/android/wikipedia/stable/)
+1. Download an APK from [Wikipedia Android releases](https://releases.wikimedia.org/mobile/android/wikipedia/stable/)
+   (the sample tests were written against `wikipedia-2.7.50552-r-2025-10-15.apk` - newer releases may change the UI)
 2. Rename it to `wikipedia.apk`
 3. Place it in `apps/android/wikipedia.apk`
 
@@ -246,41 +254,46 @@ If you prefer to download and set up the files manually:
 4. Build the app:
    ```bash
    xcodebuild -project Wikipedia.xcodeproj -scheme Wikipedia -configuration Debug \
-     -sdk iphonesimulator -destination "platform=iphonesimulator,OS=18.5,name=iPhone 16 Pro" build
+     -sdk iphonesimulator -destination "generic/platform=iOS Simulator" build
    ```
-5. Find the built app in `DerivedData/Build/Products/Debug-iphonesimulator/Wikipedia.app`
-6. Copy `Wikipedia.app` to `apps/ios/Wikipedia.app`
-7. Create a zip (required by WebdriverIO):
+5. Find where Xcode put the built app (the DerivedData location depends on the Xcode version and project settings):
    ```bash
-   cd apps/ios
+   xcodebuild -project Wikipedia.xcodeproj -scheme Wikipedia -configuration Debug \
+     -sdk iphonesimulator -destination "generic/platform=iOS Simulator" \
+     -showBuildSettings | grep " TARGET_BUILD_DIR ="
+   ```
+6. Copy `Wikipedia.app` from that directory to `apps/ios` and create a zip (required by WebdriverIO):
+   ```bash
+   cd ..
+   cp -R "<TARGET_BUILD_DIR>/Wikipedia.app" .
    zip -qr wikipedia.app.zip Wikipedia.app
    ```
 
-**Note:** WebdriverIO requires iOS apps to be in `.zip` format for simulator testing.
+**Note:** WebdriverIO requires iOS apps to be in `.zip` format for simulator testing - do not extract it.
 
 ### Android tests
 
-[`Android Studio (ver. 2025.1.2)`](https://developer.android.com/studio) - required for an easy setup of the Android
-devices
+[`Android Studio`](https://developer.android.com/studio) - required for an easy setup of the Android emulators
 
-[`Java (ver. 17)`](https://www.oracle.com/java/) - required for proper Android Studio functioning
+[`Java (ver. 17)`](https://adoptium.net/) - required for proper Android Studio functioning
 
-[`UiAutomator 2 (ver. 5.0.0)`](https://appium.io/docs/en/2.19/quickstart/uiauto2-driver/) - required to launch Appium
-tests on Android devices - or simply use the `appium driver install uiautomator2`
+[`UiAutomator2 Driver (ver. 8.x)`](https://github.com/appium/appium-uiautomator2-driver) - required to launch Appium
+tests on Android devices - install it with `appium driver install uiautomator2`
 
 ### iOS/Safari tests
 
-[`XCode (ver. 26.0.1)`](https://developer.apple.com/xcode/) - required to build the iOS app and run tests on Apple's
+[`Xcode (ver. 27.0)`](https://developer.apple.com/xcode/) - required to build the iOS app and run tests on Apple's
 simulators/devices
 
-[`Homebrew`](https://brew.sh/) - required for iOS app setup (the Wikipedia iOS setup script uses Homebrew to install SwiftLint, ClangFormat, and other dependencies)
+[`Homebrew`](https://brew.sh/) - required for iOS app setup (the Wikipedia iOS setup script uses Homebrew to install
+SwiftLint, ClangFormat, and other dependencies)
   ```bash
   # Install Homebrew (if not already installed)
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   ```
 
-[`XCUITest Driver (ver. 10.0.4)`](https://appium.github.io/appium-xcuitest-driver/9.10/installation/) - required to
-launch Appium tests on iOS devices - or simply use the `appium driver install xcuitest`
+[`XCUITest Driver (ver. 12.x)`](https://appium.github.io/appium-xcuitest-driver/latest/) - required to launch Appium
+tests on iOS devices - install it with `appium driver install xcuitest`
 
 ## Running Tests
 ___
@@ -289,11 +302,13 @@ ___
 
 After completing the [Wikipedia App files download](#wikipedia-app-files-download) section, you're ready to run tests.
 
-**Note for CI/CD:** When setting up continuous integration, use `yarn install --immutable` to ensure dependencies match exactly what's in your `yarn.lock` file. This prevents unexpected dependency updates and ensures reproducible builds.
+**Note for CI/CD:** When setting up continuous integration, use `yarn install --immutable` to ensure dependencies match
+exactly what's in your `yarn.lock` file. This prevents unexpected dependency updates and ensures reproducible builds.
+You can also run `yarn typecheck` to verify the TypeScript code without launching any tests.
 
 ### Available Sample Tests
 
-This template includes pre-configured sample tests that demonstrate how to write cross-platform tests. Each test suite showcases different testing scenarios:
+This template includes pre-configured sample tests that demonstrate how to write cross-platform tests:
 
 | Command                       | Platform                | Browser/App             |
 |-------------------------------|-------------------------|-------------------------|
@@ -314,31 +329,36 @@ These tests serve as both a validation of your setup and templates for writing y
 
 ### Web Tests
 
-**Pre-requisites:**
+**Prerequisites:**
 
-Install one of the below browsers that you want to use for testing, like:
+Install one of the browsers that you want to use for testing, like:
 
 - Microsoft Edge (used in example)
 - Google Chrome
 - Mozilla Firefox
 
-Note: **Safari** it's pre-installed on macOS. In Safari 18 or later, open the Settings app. Go to Apps > Safari > Advanced,
+WebdriverIO downloads the matching browser driver automatically.
+
+Note: **Safari** is pre-installed on macOS. In Safari 18 or later, open the Settings app. Go to Apps > Safari > Advanced,
 then turn on `Allow remote automation`.
 
 ### After Test Run
 
-After running any test suite, test results are automatically saved in the `allure-results` directory. You can view detailed test reports using the commands described in the [Reporting](#reporting) section.
+After running any test suite, test results are automatically saved in the `allure-results` directory. You can view
+detailed test reports using the commands described in the [Reporting](#reporting) section.
 
 ## Writing Tests
 ___
 
 ### Selectors
 
-This framework uses a centralized selector management system that allows you to define platform-specific selectors in one place and use them across your entire test suite.
+This framework uses a centralized selector management system that allows you to define platform-specific selectors in
+one place and use them across your entire test suite.
 
 **Selector File Location:** `./test/common/selectors.ts`
 
-All selectors are stored in the `selectors` object, organized by page/feature. Each selector can have up to four platform-specific variants to support different environments:
+All selectors are stored in the `selectors` object, organized by page/feature. Each selector can have up to four
+platform-specific variants to support different environments.
 
 ### Available Selectors
 
@@ -348,6 +368,11 @@ All selectors are stored in the `selectors` object, organized by page/feature. E
 | `ios`           | `string` | iOS (iPhone / iPad)                              |
 | `mobileBrowser` | `string` | Mobile Browser (Android - Chrome / iOS - Safari) |
 | `web`           | `string` | Desktop Browser (Windows / macOS / Linux)        |
+
+None of the keys is required — define only the ones for the platforms on which the element is actually used.
+If `mobileBrowser` is not defined, the `web` selector is used in mobile browsers.
+If an element is used on a platform for which no selector was defined, the test fails with a readable
+`No selector defined for platform: ...` error.
 
 ### Using select() and selectArray()
 
@@ -366,15 +391,15 @@ Here's a small comparison, how cross-platform selectors can be handled without s
 functions:
 
 ```typescript
-searchField: async () => {
+searchField: () => {
   if (browser.isNativeContext) {
     return browser.isAndroid ?
-      await getById(selectors.homePage.searchField.android) :
-      await getByClassChain(selectors.homePage.searchField.ios);
+      getById(selectors.homePage.searchField.android) :
+      getByClassChain(selectors.homePage.searchField.ios);
   } else {
     return browser.isMobile ?
-      await browser.$(selectors.homePage.searchField.mobileBrowser) :
-      await browser.$(selectors.homePage.searchField.web);
+      browser.$(selectors.homePage.searchField.mobileBrowser) :
+      browser.$(selectors.homePage.searchField.web);
   }
 }
 ```
@@ -388,7 +413,7 @@ is much easier to maintain and understand.
 The biggest advantage is that we don't need to specify every single property (i.e. `.searchField.android`,
 `.searchField.ios`, `.searchField.mobileBrowser`, `.searchField.web`).
 
-Additionally, if we're using a specific mobile selection method (e.g.
+Additionally, if we're using a specific mobile selection method (e.g.,
 for [iOS](https://webdriver.io/docs/selectors/#ios-xcuitest-predicate-strings-and-class-chains)
 or [Android](https://webdriver.io/docs/selectors/#accessibility-id)), we can define this using dedicated parameters:
 `androidSelectionMethod` and `iosSelectionMethod`.
@@ -404,38 +429,38 @@ searchField: () => select({
 In a *perfect world* scenario, where we use the standard `browser.$()` for all platforms
 (which is doable if we only use XPath for mobile selectors), the selector function can be simplified even further to:
 
-```javascript
+```typescript
 searchField: () => select(selectors.homePage.searchField)
 ```
 
 ### Selectors with Variables
 
-Sometimes, we want to use selectors with variables. The most common scenario would be a `data-id` attribute that has a
-dynamically generated counter (e.g., `item-0-dropdown`, `item-1-dropdown` etc.).
+Sometimes, we want to use selectors with variables. The most common scenario would be a `data-testid` attribute that
+has a dynamically generated counter (e.g., `item-0-dropdown`, `item-1-dropdown` etc.).
 
 #### Without Variables
 
-The first way to handle this situation, would be the naive and straightforward one.
+The first way to handle this situation would be the naive and straightforward one.
 
 1. Simply create a hardcoded selector that would represent that given element:
 
 ```typescript
 homePage: {
   firstDropdownItem: {
-    ios: '//XCUIElementTypeStaticText[@name, "item-0-dropdown"]',
-    android: '//android.widget.TextView[@text, "item-0-dropdown"]',
+    ios: '//XCUIElementTypeStaticText[@name="item-0-dropdown"]',
+    android: '//android.widget.TextView[@text="item-0-dropdown"]',
     web: '//*[@data-testid="item-0-dropdown"]',
     mobileBrowser: '//*[@data-testid="item-0-dropdown"]//span',
   },
   secondDropdownItem: {
-    ios: '//XCUIElementTypeStaticText[@name, "item-1-dropdown"]',
-    android: '//android.widget.TextView[@text, "item-1-dropdown"]',
+    ios: '//XCUIElementTypeStaticText[@name="item-1-dropdown"]',
+    android: '//android.widget.TextView[@text="item-1-dropdown"]',
     web: '//*[@data-testid="item-1-dropdown"]',
     mobileBrowser: '//*[@data-testid="item-1-dropdown"]//span',
   },
   thirdDropdownItem: {
-    ios: '//XCUIElementTypeStaticText[@name, "item-2-dropdown"]',
-    android: '//android.widget.TextView[@text, "item-2-dropdown"]',
+    ios: '//XCUIElementTypeStaticText[@name="item-2-dropdown"]',
+    android: '//android.widget.TextView[@text="item-2-dropdown"]',
     web: '//*[@data-testid="item-2-dropdown"]',
     mobileBrowser: '//*[@data-testid="item-2-dropdown"]//span',
   }
@@ -446,16 +471,16 @@ homePage: {
 2. Use it within your Page Object Model file:
 
 ```typescript
-firstDropdownItem: () => select(selectors.homePage.firstDropdownItem)
-secondDropdownItem: () => select(selectors.homePage.secondDropdownItem)
-thirdDropdownItem: () => select(selectors.homePage.thirdDropdownItem)
+firstDropdownItem: () => select(selectors.homePage.firstDropdownItem),
+secondDropdownItem: () => select(selectors.homePage.secondDropdownItem),
+thirdDropdownItem: () => select(selectors.homePage.thirdDropdownItem),
 ```
 
 3. Example usage in the code could look like this:
 
 ```typescript
-async selectDropdownItemByIndex(itemIndex: number): Promise < void > {
-  switch(itemIndex) {
+async selectDropdownItemByIndex(itemIndex: number): Promise<void> {
+  switch (itemIndex) {
     case 0:
       await this.firstDropdownItem().click();
       break;
@@ -476,14 +501,14 @@ The second method allows us to provide dynamic data, and make our tests more rob
 
 1. Create a selector providing the variable within the curly braces `{{itemIndex}}`
 
-*Note: If the `mobileBrowser` selector is the same as the `web` selector you can use just the `web` one, as it will
-propagate the value to `mobileBrowser` as well.*
+*Note: If the `mobileBrowser` selector is the same as the `web` selector you can define just the `web` one - it is used
+in mobile browsers as well.*
 
 ```typescript
 homePage: {
   dropdownItem: {
-    ios: '//XCUIElementTypeStaticText[@name, "item-{{itemIndex}}-dropdown"]',
-    android: '//android.widget.TextView[@text, "item-{{itemIndex}}-dropdown"]', 
+    ios: '//XCUIElementTypeStaticText[@name="item-{{itemIndex}}-dropdown"]',
+    android: '//android.widget.TextView[@text="item-{{itemIndex}}-dropdown"]',
     web: '//*[@data-testid="item-{{itemIndex}}-dropdown"]'
   }
   // [rest of the code]
@@ -507,7 +532,7 @@ nthDropdownItem: (dropdownItemIndex: number) =>
 3. Example usage in the code could look like this:
 
 ```typescript
-async selectDropdownItemByIndex(itemIndex: number): Promise <void> {
+async selectDropdownItemByIndex(itemIndex: number): Promise<void> {
   await this.nthDropdownItem(itemIndex).click();
 },
 ```
@@ -517,27 +542,28 @@ ___
 
 ### Allure Report
 
-Allure is a popular test reporting framework that provides detailed, visual test execution reports. After your tests complete, you can generate and view reports using the following commands:
-
-**Prerequisites:** You need to install [Allure](https://allurereport.org/docs/gettingstarted-installation/) before using these commands.
+Allure is a popular test reporting framework that provides detailed, visual test execution reports. The Allure command
+line is installed together with the project dependencies (it requires Java to run).
 
 **Quick View (Recommended for local development):**
 ```shell
-allure serve
+yarn report
 ```
-Generates a report from the latest test results and automatically opens it in your browser. This is the fastest way to view test results after a test run.
+Generates a report from the latest test results and automatically opens it in your browser. This is the fastest way to
+view test results after a test run.
 
 **Generate Static Report (For hosting/sharing):**
 ```shell
-allure generate
+allure generate allure-results --clean
 ```
-Creates a standalone HTML report in the `allure-report` directory. Use this when you want to host the report on a web server (e.g., GitHub Pages, GitLab Pages, or internal documentation sites).
+Creates a standalone HTML report in the `allure-report` directory. Use this when you want to host the report on a web
+server (e.g., GitHub Pages, GitLab Pages, or internal documentation sites).
 
 **Open Generated Report:**
 ```shell
-allure open
+yarn allure open
 ```
-Opens a previously generated static report. Run this command from the directory containing the `allure-report` folder (typically the project root after running `allure generate`).
+Opens a previously generated static report from the `allure-report` directory.
 
 ## Known Issues
 ___
@@ -546,4 +572,11 @@ ___
 
 **Issue:** iOS tests may fail on the first launch with simulator-related errors.
 
-**Solution:** Simply retry running the tests. The iOS Simulator sometimes doesn't initialize properly on the first attempt, but typically works on subsequent runs. This is a known behavior with iOS Simulators and not specific to this framework.
+**Solution:** Retry running the tests. The iOS Simulator sometimes doesn't initialize properly on the first
+attempt, but typically works on later runs. This is a known behavior with iOS Simulators and not specific to this
+framework.
+
+## License
+___
+
+This project is licensed under the [Apache License 2.0](./LICENSE).

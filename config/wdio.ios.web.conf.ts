@@ -16,8 +16,8 @@ export const config = deepmerge(
         browserName: "Safari",
         maxInstances: 1,
         'appium:options': {
-          deviceName: 'iPhone 16 Pro',
-          platformVersion: '18.5',
+          deviceName: 'iPhone 18 Pro',
+          platformVersion: '27.0',
           orientation: 'PORTRAIT',
           automationName: 'XCUITest',
           newCommandTimeout: 500,
@@ -26,6 +26,7 @@ export const config = deepmerge(
           appWaitForLaunch: true,
           noReset: false,
           fullReset: false,
+          isHeadless: true,
         }
       },
     ],

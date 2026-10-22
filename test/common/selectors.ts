@@ -1,37 +1,45 @@
 export const selectors = {
   homePage: {
+    onboardingSkipButton: {
+      android: 'Forward',
+      ios: '**/XCUIElementTypeButton[`name == "App Onboarding Next Button"`]'
+    },
     skipButton: {
-      android: 'org.wikipedia:id/fragment_onboarding_skip_button',
+      android: 'new UiSelector().text("Skip")',
       ios: '**/XCUIElementTypeStaticText[`label == "Skip"`]'
     },
     searchButton: {
+      android: 'Search',
+      ios: '**/XCUIElementTypeButton[`name == "Search Tab Button"`]',
       web: '//*[@id="searchIcon"]',
       mobileBrowser: '//*[@id="searchIcon"]',
     },
     searchField: {
-      android: 'org.wikipedia:id/search_container',
-      ios: '**/XCUIElementTypeSearchField[`label == "Search Wikipedia"`]',
+      android: 'new UiSelector().resourceId("org.wikipedia:id/search_src_text")',
+      ios: '**/XCUIElementTypeSearchField[`name == "Search Field"`]',
       web: '(//input[@name="search"])[1]',
-      mobileBrowser: '//form[@id="minerva-overlay-search"]//input[@name="search"]',
     },
     searchFieldInput: {
       android: 'org.wikipedia:id/search_src_text',
     },
+    closeSearchTooltip: {
+      android: 'Close',
+    },
     searchResultItem: {
-      android: '//android.widget.TextView[@resource-id="org.wikipedia:id/page_list_item_title" and @text="{{searchPhrase}}"]',
-      ios: 'label == "{{searchPhrase}}"',
+      android: 'new UiSelector().text("{{searchPhrase}}").instance(1)',
+      ios: 'name == "{{searchPhrase}}"',
       web: '//li[@title="{{searchPhrase}}"]',
       mobileBrowser: '//li[@title="{{searchPhrase}}"]//a',
     },
   },
   articlePage: {
     pageTitle: {
-      android: '(//android.widget.TextView[@text="Test"])[1]',
-      ios: '**/XCUIElementTypeStaticText[`label == "Test"`][2]',
+      android: '(//android.widget.TextView[@text="{{pageTitle}}"])[1]',
+      ios: '**/XCUIElementTypeStaticText[`label == "{{pageTitle}}"`][2]',
       web: '#firstHeading',
     },
-    closeWikipediaGamesModalButton: {
-      android: 'org.wikipedia:id/closeButton',
+    closeModalButton: {
+      ios: '**/XCUIElementTypeButton[`name == "xmark.circle.fill"`]',
     },
   }
 }

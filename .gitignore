@@ -7,7 +7,16 @@ node_modules
 /.idea/misc.xml
 /.idea/modules.xml
 /.idea/vcs.xml
+/.idea/workspace.xml
 .pnp.*
+.DS_Store
+.env
+
+# Yarn Berry (commit .yarn/releases, ignore the rest)
+.yarn/*
+!.yarn/releases
+!.yarn/patches
+!.yarn/plugins
 
 # Test Applications
 apps/
@@ -19,6 +28,7 @@ DerivedData/
 
 # Reports
 allure-results
+allure-report
 
-# Logs
-/logs/appium.log
+# Logs (incl. visual regression screenshots)
+/logs/
