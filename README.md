@@ -126,7 +126,7 @@ iOS:
 `macOS Tahoe 26.6 or later on an Apple silicon Mac` - required to launch [`iOS/Safari`](#iossafari-tests) tests
 (Xcode 27 does not run on Intel Macs). If you don't want to perform iOS tests — feel free to use any OS of your choice.
 
-[`Node.js (ver. 22.15.0 or later)`](https://nodejs.org/en) - required for Appium & WebdriverIO
+[`Node.js (ver. 22.19.0 or later)`](https://nodejs.org/en) - required for Appium & WebdriverIO
 
 [`Yarn (ver. 4.18.1)`](https://yarnpkg.com/) - required for package management (Yarn Berry)
 
@@ -160,8 +160,8 @@ and PATH configurations. We strongly recommend using version managers to simplif
   # Install Volta
   curl https://get.volta.sh | bash
 
-  # Install Node.js 22.13.0
-  volta install node@22.13.0
+  # Install Node.js 22.19.0
+  volta install node@22.19.0
 
   # Install Yarn 4.18.1
   volta install yarn@4.18.1
@@ -184,8 +184,8 @@ and PATH configurations. We strongly recommend using version managers to simplif
 
   # After installation:
 
-  # Install Node.js 22.15.0
-  volta install node@22.15.0
+  # Install Node.js 22.19.0
+  volta install node@22.19.0
 
   # Install Yarn 4.18.1
   volta install yarn@4.18.1

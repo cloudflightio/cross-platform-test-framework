@@ -5,10 +5,10 @@
   "description": "Cross-platform E2E testing template (web, Android, iOS) based on WebdriverIO v10",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=22.15.0"
+    "node": ">=22.19.0"
   },
   "volta": {
-    "node": "22.15.0"
+    "node": "22.19.0"
   },
   "scripts": {
     "wdio:ios:web": "wdio run ./config/wdio.ios.web.conf.ts",
